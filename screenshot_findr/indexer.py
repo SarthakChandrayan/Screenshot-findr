@@ -11,9 +11,12 @@ from typing import Callable, Iterable, Optional
 
 from PIL import Image
 
+from . import tags as tagger
 from .config import IMAGE_EXTENSIONS
 from .db import Database
+from .dupes import dhash
 from .ocr import OcrFunc
+from .semantic import Embedder, to_blob
 
 log = logging.getLogger(__name__)
 
@@ -24,6 +27,7 @@ class ScanResult:
     updated: int = 0
     removed: int = 0
     unchanged: int = 0
+    embedded: int = 0
     failed: list[str] = field(default_factory=list)
 
 
@@ -51,8 +55,9 @@ def scan(
     ocr_backend: str,
     ocr: Optional[OcrFunc],
     progress: Optional[Callable[[int, int, str], None]] = None,
+    embedder: Optional[Embedder] = None,
 ) -> ScanResult:
-    """Index new/changed images, drop deleted ones. Returns counts."""
+    """Index new/changed images, drop deleted ones, then embed text for meaning search."""
     folders = list(folders)
     result = ScanResult()
     known = db.known_files()
@@ -60,6 +65,7 @@ def scan(
     seen: set[str] = set()
 
     todo: list[tuple[Path, os.stat_result, bool]] = []
+    missing_meta: list[Path] = []
     for path in on_disk:
         key = str(path)
         seen.add(key)
@@ -71,7 +77,7 @@ def scan(
         if prev is None:
             todo.append((path, st, True))
             continue
-        size, mtime, prev_backend = prev
+        size, mtime, prev_backend, has_meta = prev
         changed = size != st.st_size or abs(mtime - st.st_mtime) > 1e-6
         # Retry OCR for files indexed while no OCR engine was available.
         needs_ocr = prev_backend == "none" and ocr is not None
@@ -79,6 +85,14 @@ def scan(
             todo.append((path, st, False))
         else:
             result.unchanged += 1
+            if not has_meta:  # indexed by an older version: add tags + hash, no re-OCR
+                missing_meta.append(path)
+
+    for path in missing_meta:
+        shot = db.get_by_path(str(path))
+        if shot:
+            db.set_meta(shot.id, tagger.classify(shot.text, shot.filename, shot.width, shot.height),
+                        dhash(str(path)) or "")
 
     for i, (path, st, is_new) in enumerate(todo, start=1):
         if progress:
@@ -92,6 +106,8 @@ def scan(
                 result.failed.append(str(path))
         width, height = _image_size(path)
         db.upsert(
+            tags=tagger.classify(text, path.name, width, height),
+            phash=dhash(str(path)) or "",  # "" = unreadable, so we don't retry forever
             path=str(path),
             filename=path.name,
             size=st.st_size,
@@ -115,14 +131,38 @@ def scan(
     if gone:
         db.remove_paths(gone)
         result.removed = len(gone)
+
+    if embedder is not None:
+        result.embedded = embed_pending(db, embedder, progress)
     return result
+
+
+def embed_pending(db: Database, embedder: Embedder,
+                  progress: Optional[Callable[[int, int, str], None]] = None) -> int:
+    """Compute meaning-search vectors for screenshots that don't have one yet."""
+    done = 0
+    while True:
+        batch = db.needing_embedding(embedder.name)
+        if not batch:
+            return done
+        if progress:
+            progress(done + len(batch), done + len(batch), "understanding screenshots…")
+        try:
+            vectors = embedder.embed_documents([text for _, text in batch])
+        except Exception as exc:
+            log.warning("Embedding failed: %s", exc)
+            return done
+        db.set_embeddings([(sid, to_blob(v)) for (sid, _), v in zip(batch, vectors)], embedder.name)
+        done += len(batch)
 
 
 class BackgroundIndexer:
     """Runs `scan` in a thread, now and then every `interval` seconds."""
 
     def __init__(self, db: Database, folders: list[Path], ocr_backend: str,
-                 ocr: Optional[OcrFunc], interval: float = 60.0):
+                 ocr: Optional[OcrFunc], interval: float = 60.0,
+                 embedder: Optional[Embedder] = None):
+        self.embedder = embedder
         self.db = db
         self.folders = folders
         self.ocr_backend = ocr_backend
@@ -140,7 +180,8 @@ class BackgroundIndexer:
         with self._lock:
             self.status.update(running=True, done=0, total=0, current="")
             try:
-                res = scan(self.db, self.folders, self.ocr_backend, self.ocr, self._progress)
+                res = scan(self.db, self.folders, self.ocr_backend, self.ocr, self._progress,
+                           self.embedder)
                 self.status["last"] = res.__dict__ | {"failed": len(res.failed)}
                 return res
             finally:

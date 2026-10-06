@@ -7,12 +7,18 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 from flask import Flask, abort, jsonify, render_template, request, send_file
 from PIL import Image
 
+from send2trash import send2trash
+
+from . import dupes
 from .db import Database, Screenshot
 from .indexer import BackgroundIndexer
+from .semantic import Embedder, search_by_meaning
+from .tags import EMOJI
 
 THUMB_SIZE = (480, 480)
 
@@ -29,10 +35,29 @@ def _serialize(s: Screenshot) -> dict:
         "snippet": s.snippet or s.text[:200],
         "has_text": bool(s.text),
         "views": s.view_count,
+        "tags": s.tags,
+        "match": s.match,
     }
 
 
-def create_app(db: Database, indexer: BackgroundIndexer, thumbs_dir: Path, ocr_backend: str) -> Flask:
+def find_duplicate_groups(db: Database) -> list[list[Screenshot]]:
+    """Groups of look-alike screenshots; the first one in each group is the one to keep
+    (largest image, then the oldest, i.e. the original rather than a copy)."""
+    rows = db.hashes()
+    texts = {sid: text for sid, _, text in rows}
+    groups = dupes.group([(sid, h) for sid, h, _ in rows],
+                         same=lambda a, b: dupes.similar_text(texts[a], texts[b]))
+    result = []
+    for ids in groups:
+        shots = db.get_many(ids)
+        shots.sort(key=lambda s: (-(s.width or 0) * (s.height or 0), s.mtime))
+        result.append(shots)
+    result.sort(key=lambda g: (-len(g), -g[0].mtime))
+    return result
+
+
+def create_app(db: Database, indexer: BackgroundIndexer, thumbs_dir: Path, ocr_backend: str,
+               embedder: Optional[Embedder] = None) -> Flask:
     app = Flask(__name__)
     thumbs_dir.mkdir(parents=True, exist_ok=True)
 
@@ -54,14 +79,48 @@ def create_app(db: Database, indexer: BackgroundIndexer, thumbs_dir: Path, ocr_b
             "index.html",
             folders=[str(f) for f in indexer.folders],
             ocr_backend=ocr_backend,
+            tag_emoji=EMOJI,
         )
 
     @app.get("/api/search")
     def api_search():
         q = request.args.get("q", "").strip()
+        tag = request.args.get("tag") or None
         offset = max(int(request.args.get("offset", 0) or 0), 0)
-        results = db.search(q, limit=60, offset=offset) if q else db.recent(limit=60, offset=offset)
-        return jsonify({"query": q, "results": [_serialize(s) for s in results]})
+        results = db.search(q, limit=60, offset=offset, tag=tag)
+        has_more = len(results) == 60
+        if q and embedder is not None and offset == 0:
+            # Words first, then screenshots that are about the same thing.
+            results += search_by_meaning(db, embedder, q, tag=tag, exclude=[s.id for s in results])
+        return jsonify({"query": q, "tag": tag, "has_more": has_more,
+                        "results": [_serialize(s) for s in results]})
+
+    @app.get("/api/tags")
+    def api_tags():
+        return jsonify({"tags": [{"tag": t, "count": n, "emoji": EMOJI.get(t, "")}
+                                 for t, n in db.tag_counts().items()]})
+
+    @app.get("/api/duplicates")
+    def api_duplicates():
+        groups = find_duplicate_groups(db)
+        return jsonify({"groups": [[_serialize(s) for s in g] for g in groups],
+                        "extra": sum(len(g) - 1 for g in groups)})
+
+    @app.post("/api/delete")
+    def api_delete():
+        """Move screenshots to the Recycle Bin (recoverable) and forget them."""
+        require_local_ajax()
+        ids = [int(i) for i in (request.get_json(silent=True) or {}).get("ids", [])]
+        deleted, failed = [], []
+        for shot in db.get_many(ids):
+            try:
+                if os.path.exists(shot.path):
+                    send2trash(shot.path)
+                deleted.append(shot.id)
+            except Exception as exc:
+                failed.append({"id": shot.id, "error": str(exc)})
+        db.remove_ids(deleted)
+        return jsonify({"deleted": deleted, "failed": failed})
 
     @app.get("/api/forgotten")
     def api_forgotten():
@@ -69,7 +128,8 @@ def create_app(db: Database, indexer: BackgroundIndexer, thumbs_dir: Path, ocr_b
 
     @app.get("/api/status")
     def api_status():
-        return jsonify({**indexer.status, "count": db.count(), "ocr_backend": ocr_backend})
+        return jsonify({**indexer.status, "count": db.count(), "ocr_backend": ocr_backend,
+                        "smart": embedder is not None})
 
     @app.post("/api/rescan")
     def api_rescan():

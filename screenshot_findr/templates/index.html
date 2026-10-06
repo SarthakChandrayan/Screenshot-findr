@@ -48,6 +48,22 @@
   .side pre { white-space: pre-wrap; word-break: break-word; font: 12px/1.4 Consolas, monospace; background: var(--bg); padding: 10px; border-radius: 8px; margin: 0; }
   .actions { display: flex; flex-wrap: wrap; gap: 6px; }
   .path { font-size: 12px; color: var(--muted); word-break: break-all; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; max-width: 1400px; margin: 10px auto 0; }
+  .chip { font-size: 13px; padding: 4px 10px; border-radius: 99px; }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .chip .n { opacity: .7; margin-left: 3px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .badge { font-size: 11px; padding: 0 7px; border-radius: 99px; border: 1px solid var(--border); color: var(--muted); }
+  .badge.meaning { border-color: var(--accent); color: var(--accent); }
+  .group { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 14px; }
+  .group-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 14px; }
+  .group .grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+  .keep { outline: 2px solid #2bb673; }
+  .keep-label { font-size: 11px; color: #2bb673; font-weight: 600; }
+  button.danger { color: #d64545; }
+  button.danger:hover { border-color: #d64545; }
+  .tabs { display: flex; gap: 6px; }
+  .tab.on { border-color: var(--accent); color: var(--accent); }
   @media (max-width: 800px) { .viewer { grid-template-columns: 1fr; } .side { border-left: none; } h1 { display: none; } }
 </style>
 </head>
@@ -55,13 +71,19 @@
 <header>
   <div class="bar">
     <h1>📸 Screenshot Findr</h1>
-    <input id="q" type="search" placeholder="Search the text inside your screenshots…  (e.g. invoice, error, flight)" autofocus autocomplete="off">
+    <input id="q" type="search" placeholder="Search your screenshots…  (e.g. invoice, wifi password, flight to Delhi)" autofocus autocomplete="off">
+    <div class="tabs">
+      <button class="tab on" id="tab-search">Search</button>
+      <button class="tab" id="tab-dupes" title="Look-alike screenshots you can clean up">Duplicates</button>
+    </div>
     <button id="rescan" title="Look for new screenshots now">Rescan</button>
   </div>
+  <div class="chips" id="chips"></div>
   <div id="status">Starting…</div>
 </header>
 
 <main>
+ <div id="view-search">
   <section id="forgotten-section" hidden>
     <h2>🕰️ Forgotten: screenshots you saved but never came back to</h2>
     <div class="grid" id="forgotten"></div>
@@ -70,6 +92,11 @@
   <div class="grid" id="results"></div>
   <div class="empty" id="empty" hidden></div>
   <button id="more" hidden>Load more</button>
+ </div>
+ <div id="view-dupes" hidden>
+  <h2 id="dupes-title">Looking for duplicates…</h2>
+  <div id="dupes"></div>
+ </div>
 </main>
 
 <dialog id="viewer">
@@ -82,6 +109,7 @@
         <button id="v-open">Open</button>
         <button id="v-reveal">Show in folder</button>
         <button id="v-copy">Copy text</button>
+        <button id="v-delete" class="danger" title="Move to the Recycle Bin">Delete</button>
         <button id="v-close">Close</button>
       </div>
       <pre id="v-text"></pre>
@@ -96,7 +124,77 @@ const post = (url) => fetch(url, { method: "POST", headers: { "X-Requested-With"
 const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const highlight = (s) => esc(s).replace(/\[\[/g, "<mark>").replace(/\]\]/g, "</mark>");
 
-let query = "", offset = 0, current = null, searchTimer = null, lastCount = -1;
+const EMOJI = {{ tag_emoji | tojson }};
+let query = "", tag = null, offset = 0, current = null, searchTimer = null, lastCount = -1;
+
+function badges(s) {
+  const b = s.tags.map((t) => `<span class="badge">${EMOJI[t] || ""} ${esc(t)}</span>`);
+  if (s.match === "meaning") b.unshift('<span class="badge meaning" title="Found by meaning, not exact words">✨ related</span>');
+  return b.length ? `<div class="badges">${b.join("")}</div>` : "";
+}
+
+async function loadTags() {
+  const data = await (await fetch("/api/tags")).json();
+  const box = $("chips");
+  box.innerHTML = "";
+  if (!data.tags.length) return;
+  const all = [{ tag: null, emoji: "", count: null }, ...data.tags];
+  all.forEach((t) => {
+    const b = document.createElement("button");
+    b.className = "chip" + (t.tag === tag ? " on" : "");
+    b.innerHTML = t.tag ? `${t.emoji} ${esc(t.tag)}<span class="n">${t.count}</span>` : "All";
+    b.onclick = () => { tag = t.tag; showView("search"); loadTags(); loadResults(); };
+    box.appendChild(b);
+  });
+}
+
+function showView(name) {
+  $("view-search").hidden = name !== "search";
+  $("view-dupes").hidden = name !== "dupes";
+  $("tab-search").classList.toggle("on", name === "search");
+  $("tab-dupes").classList.toggle("on", name === "dupes");
+  if (name === "dupes") loadDupes();
+}
+
+async function deleteShots(ids, label) {
+  if (!confirm(`Move ${label} to the Recycle Bin?`)) return false;
+  const res = await fetch("/api/delete", {
+    method: "POST",
+    headers: { "X-Requested-With": "screenshot-findr", "Content-Type": "application/json" },
+    body: JSON.stringify({ ids }),
+  });
+  const data = await res.json();
+  if (data.failed.length) alert(`${data.failed.length} could not be moved: ${data.failed[0].error}`);
+  return data.deleted.length > 0;
+}
+
+async function loadDupes() {
+  $("dupes-title").textContent = "Looking for duplicates…";
+  const data = await (await fetch("/api/duplicates")).json();
+  const box = $("dupes");
+  box.innerHTML = "";
+  $("dupes-title").textContent = data.groups.length
+    ? `${data.groups.length} group${data.groups.length > 1 ? "s" : ""} of look-alike screenshots: ${data.extra} you could delete`
+    : "No duplicates found. 🎉";
+  data.groups.forEach((g) => {
+    const el = document.createElement("div");
+    el.className = "group";
+    el.innerHTML = `<div class="group-head"><span>${g.length} look-alikes</span></div><div class="grid"></div>`;
+    const btn = document.createElement("button");
+    btn.className = "danger";
+    btn.textContent = `Keep best, delete ${g.length - 1}`;
+    btn.onclick = async () => {
+      if (await deleteShots(g.slice(1).map((s) => s.id), `${g.length - 1} screenshot(s)`)) { loadDupes(); loadTags(); }
+    };
+    el.querySelector(".group-head").appendChild(btn);
+    g.forEach((s, i) => {
+      const c = card(s);
+      if (i === 0) { c.classList.add("keep"); c.querySelector(".meta").insertAdjacentHTML("afterbegin", '<div class="keep-label">✓ KEEP</div>'); }
+      el.querySelector(".grid").appendChild(c);
+    });
+    box.appendChild(el);
+  });
+}
 
 function card(s) {
   const el = document.createElement("div");
@@ -106,6 +204,7 @@ function card(s) {
     <div class="meta">
       <div class="name" title="${esc(s.filename)}">${esc(s.filename)}</div>
       <div class="date">${esc(s.taken)}</div>
+      ${badges(s)}
       ${s.snippet ? `<div class="snip">${highlight(s.snippet)}</div>` : ""}
     </div>`;
   el.onclick = () => openViewer(s);
@@ -114,15 +213,20 @@ function card(s) {
 
 async function loadResults(reset = true) {
   if (reset) offset = 0;
-  const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&offset=${offset}`);
+  const params = new URLSearchParams({ q: query, offset });
+  if (tag) params.set("tag", tag);
+  const res = await fetch(`/api/search?${params}`);
   const data = await res.json();
-  if (data.query !== query) return; // a newer search is on its way
+  if (data.query !== query || data.tag !== tag) return; // a newer search is on its way
   const grid = $("results");
   if (reset) grid.innerHTML = "";
   data.results.forEach((s) => grid.appendChild(card(s)));
-  offset += data.results.length;
-  $("results-title").textContent = query ? `Results for “${query}”` : "Recent screenshots";
-  $("more").hidden = data.results.length < 60;
+  offset += data.results.filter((s) => s.match !== "meaning").length;
+  const label = tag ? `${EMOJI[tag] || ""} ${tag}` : "";
+  $("results-title").textContent = query
+    ? `Results for “${query}”${label ? " in " + label : ""}`
+    : (label ? `${label} screenshots` : "Recent screenshots");
+  $("more").hidden = !data.has_more;
   const none = reset && data.results.length === 0;
   $("empty").hidden = !none;
   if (none) {
@@ -131,7 +235,7 @@ async function loadResults(reset = true) {
       : FOLDERS.length ? "No screenshots indexed yet. Hang on while the first scan runs…"
       : "No screenshot folder found. Start the app with --folder \"C:\\path\\to\\screenshots\".";
   }
-  $("forgotten-section").hidden = !!query || $("forgotten").children.length === 0;
+  $("forgotten-section").hidden = !!query || !!tag || $("forgotten").children.length === 0;
 }
 
 async function loadForgotten() {
@@ -139,7 +243,7 @@ async function loadForgotten() {
   const grid = $("forgotten");
   grid.innerHTML = "";
   data.results.forEach((s) => grid.appendChild(card(s)));
-  $("forgotten-section").hidden = !!query || data.results.length === 0;
+  $("forgotten-section").hidden = !!query || !!tag || data.results.length === 0;
 }
 
 async function openViewer(s) {
@@ -156,12 +260,16 @@ async function openViewer(s) {
 async function pollStatus() {
   try {
     const st = await (await fetch("/api/status")).json();
-    let msg = `${st.count} screenshots indexed · OCR: ${st.ocr_backend}`;
+    let msg = `${st.count} screenshots indexed · OCR: ${st.ocr_backend}` + (st.smart ? " · ✨ meaning search on" : "");
     if (st.running && st.total) msg += ` · reading ${st.done}/${st.total}: ${st.current}`;
     else if (st.running) msg += " · scanning folders…";
     msg += ` · watching ${FOLDERS.length ? FOLDERS.join(", ") : "no folders"}`;
     $("status").textContent = msg;
-    if (st.count !== lastCount && !query) { lastCount = st.count; loadResults(); loadForgotten(); }
+    if (st.count !== lastCount) {
+      lastCount = st.count;
+      loadTags();
+      if (!query) { loadResults(); loadForgotten(); }
+    }
   } catch (e) {
     $("status").textContent = "Lost connection to Screenshot Findr. Is it still running?";
   }
@@ -178,11 +286,21 @@ $("v-close").onclick = () => $("viewer").close();
 $("viewer").addEventListener("click", (e) => { if (e.target.id === "viewer") $("viewer").close(); });
 $("v-open").onclick = () => current && post(`/api/open/${current.id}`);
 $("v-reveal").onclick = () => current && post(`/api/reveal/${current.id}`);
+$("v-delete").onclick = async () => {
+  if (current && await deleteShots([current.id], `“${current.filename}”`)) {
+    $("viewer").close();
+    if ($("view-dupes").hidden) { loadResults(); loadForgotten(); } else loadDupes();
+    loadTags();
+  }
+};
+$("tab-search").onclick = () => showView("search");
+$("tab-dupes").onclick = () => showView("dupes");
 $("v-copy").onclick = () => navigator.clipboard.writeText($("v-text").textContent);
 document.addEventListener("keydown", (e) => {
   if (e.key === "/" && document.activeElement !== $("q")) { e.preventDefault(); $("q").focus(); }
 });
 
+loadTags();
 loadResults();
 loadForgotten();
 pollStatus();

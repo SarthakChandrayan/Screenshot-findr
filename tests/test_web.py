@@ -53,3 +53,37 @@ def test_actions_require_custom_header(client):
 def test_status(client):
     st = client.get("/api/status").get_json()
     assert st["count"] == 1 and st["ocr_backend"] == "fake"
+
+
+def test_tags_api_and_filter(client):
+    tags = client.get("/api/tags").get_json()["tags"]
+    assert any(t["tag"] == "receipt" for t in tags)
+    assert len(client.get("/api/search?tag=receipt").get_json()["results"]) == 1
+    assert client.get("/api/search?tag=code").get_json()["results"] == []
+    assert len(client.get("/api/search?q=pizza&tag=receipt").get_json()["results"]) == 1
+
+
+def test_duplicates_and_delete(tmp_path, db, fake_ocr, monkeypatch):
+    import shutil
+
+    from screenshot_findr import web
+
+    folder = tmp_path / "Shots"
+    a = make_screenshot(folder / "a.png", "Your order has shipped")
+    shutil.copy(a, folder / "a-copy.png")
+    make_screenshot(folder / "b.png", "Totally different picture here")
+    scan(db, [folder], "fake", fake_ocr)
+    trashed = []
+    monkeypatch.setattr(web, "send2trash", lambda p: trashed.append(p))
+    app = web.create_app(db, BackgroundIndexer(db, [folder], "fake", fake_ocr), tmp_path / "t", "fake")
+    c = app.test_client()
+
+    data = c.get("/api/duplicates").get_json()
+    assert data["extra"] == 1
+    (group,) = data["groups"]
+    assert {s["filename"] for s in group} == {"a.png", "a-copy.png"}
+
+    assert c.post("/api/delete", json={"ids": [group[1]["id"]]}).status_code == 403
+    r = c.post("/api/delete", json={"ids": [group[1]["id"]]}, headers=AJAX).get_json()
+    assert r["deleted"] == [group[1]["id"]] and len(trashed) == 1
+    assert c.get("/api/duplicates").get_json()["groups"] == []

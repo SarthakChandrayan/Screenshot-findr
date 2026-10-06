@@ -4,13 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "screenshot-findr"
-version = "0.1.0"
+version = "0.2.0"
 description = "Find the screenshots you saved and forgot about: search them by the text inside them."
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "flask>=2.2",
-    "pillow>=9.0",
+    "pillow>=9.1",
+    "numpy>=1.21",
+    "send2trash>=1.8",
     # Windows' built-in OCR engine (no extra install needed on Windows 10/11)
     "winrt-runtime>=2.0; sys_platform == 'win32'",
     "winrt-Windows.Foundation>=2.0; sys_platform == 'win32'",
@@ -24,6 +26,8 @@ dependencies = [
 
 [project.optional-dependencies]
 tesseract = ["pytesseract>=0.3"]
+# search by meaning with a small local AI model
+smart = ["fastembed>=0.3"]
 dev = ["pytest>=7"]
 
 [project.scripts]
