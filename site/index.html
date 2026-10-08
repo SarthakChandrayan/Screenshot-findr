@@ -35,7 +35,7 @@
 <main id="top">
   <section class="wrap intro">
     <div>
-      <p class="eyebrow">Desktop app · Windows</p>
+      <p class="eyebrow">Desktop app · Windows &amp; macOS</p>
       <h1>Find the screenshot you took for a reason.</h1>
       <p class="lead">Screenshot Findr reads the text inside every screenshot on your PC and makes it searchable. It tags them, finds duplicates and reminds you about the ones you never opened. Everything stays on your computer.</p>
       <div class="cta">
@@ -47,8 +47,8 @@
       </div>
     </div>
     <dl class="facts">
-      <dt>runs on</dt><dd>Windows 10 / 11</dd>
-      <dt>text reading</dt><dd>Windows built-in OCR</dd>
+      <dt>runs on</dt><dd>Windows 10 / 11 · macOS</dd>
+      <dt>text reading</dt><dd>Windows OCR · Apple Vision</dd>
       <dt>search</dt><dd>SQLite full-text + local AI model</dd>
       <dt>privacy</dt><dd>offline, nothing uploaded</dd>
       <dt>stack</dt><dd>Python · Flask · vanilla JS</dd>
@@ -132,7 +132,7 @@
   <section class="wrap section" id="download">
     <div class="section-head">
       <span class="num">03</span><h2>Download</h2>
-      <p>Free, for Windows 10 and 11. No account, no cloud.</p>
+      <p>Free for Windows and macOS. No account, no cloud.</p>
     </div>
     <div class="download">
       <div>
@@ -152,7 +152,15 @@
         <p class="small">Windows may show "Windows protected your PC" because the app isn't code-signed. Click <b>More info → Run anyway</b>.</p>
       </div>
       <div>
-        <h3>Or run from source</h3>
+        <h3>macOS</h3>
+<pre class="code"><span class="c"># Terminal, with Python 3.9+</span>
+git clone https://github.com/SarthakChandrayan/Screenshot-findr
+cd Screenshot-findr
+python3 -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -e ".[smart]"
+python -m screenshot_findr</pre>
+        <p class="small">Finds your screenshot folder (Desktop or your custom location) and reads text with Apple's built-in Vision engine. No one-click Mac download yet.</p>
+        <h3 style="margin-top:22px">Windows, from source</h3>
 <pre class="code"><span class="c"># PowerShell, with Python 3.9+</span>
 git clone https://github.com/SarthakChandrayan/Screenshot-findr
 cd Screenshot-findr
