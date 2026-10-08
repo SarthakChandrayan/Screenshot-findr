@@ -87,15 +87,20 @@ def _windows_ocr() -> Optional[OcrFunc]:
     return run
 
 
-def probe_windows_ocr(timeout: float = 90) -> tuple[bool, str]:
+def probe_windows_ocr(timeout: float = 90, with_embedder: bool = False) -> tuple[bool, str]:
     """Try Windows OCR on a test image in a separate process.
 
     If the native WinRT code crashes, it takes down only that helper process,
-    not the app. Returns (works, details).
+    not the app. With `with_embedder`, the helper first loads the meaning-search
+    runtime like the app does, so a clash between the two is caught here too.
+    Returns (works, details).
     """
+    cmd = [sys.executable, "-X", "faulthandler", "-m", "screenshot_findr.ocr", "--probe"]
+    if with_embedder:
+        cmd.append("--with-embedder")
     try:
         proc = subprocess.run(
-            [sys.executable, "-X", "faulthandler", "-m", "screenshot_findr.ocr", "--probe"],
+            cmd,
             capture_output=True, text=True, timeout=timeout,
         )
     except subprocess.TimeoutExpired:
@@ -112,6 +117,11 @@ def _probe_main() -> int:
 
     from PIL import Image, ImageDraw, ImageFont
 
+    if "--with-embedder" in sys.argv:
+        try:
+            import fastembed  # noqa: F401  (loads onnxruntime, as the app does before OCR)
+        except ImportError:
+            pass
     func = _windows_ocr()
     if func is None:
         print("winrt OCR packages missing or no OCR language installed", file=sys.stderr)
@@ -153,8 +163,12 @@ def _tesseract_ocr() -> Optional[OcrFunc]:
     return run
 
 
-def get_ocr(preferred: str = "auto") -> tuple[str, Optional[OcrFunc]]:
-    """Return (backend_name, ocr_function). The function is None if no OCR is available."""
+def get_ocr(preferred: str = "auto",
+            with_embedder: bool = False) -> tuple[str, Optional[OcrFunc]]:
+    """Return (backend_name, ocr_function). The function is None if no OCR is available.
+
+    Pass with_embedder=True when meaning search is already loaded in this process.
+    """
     backends = {"windows": _windows_ocr, "tesseract": _tesseract_ocr}
     if preferred == "none":
         return "none", None
@@ -163,7 +177,7 @@ def get_ocr(preferred: str = "auto") -> tuple[str, Optional[OcrFunc]]:
         if name == "windows":
             if sys.platform != "win32":
                 continue
-            works, details = probe_windows_ocr()
+            works, details = probe_windows_ocr(with_embedder=with_embedder)
             if not works:
                 print(f"Windows text reader unavailable ({details})", file=sys.stderr)
                 continue
