@@ -11,8 +11,11 @@ def make_screenshot(path: Path, text: str) -> Path:
     draw = ImageDraw.Draw(img)
     try:
         font = ImageFont.truetype("DejaVuSans.ttf", 40)
-    except OSError:
-        font = ImageFont.load_default()
+    except OSError:  # e.g. macOS has no DejaVu: use Pillow's built-in font at a readable size
+        try:
+            font = ImageFont.load_default(size=40)
+        except TypeError:  # Pillow < 10.1
+            font = ImageFont.load_default()
     draw.text((20, 70), text, fill="black", font=font)
     path.parent.mkdir(parents=True, exist_ok=True)
     img.save(path)
