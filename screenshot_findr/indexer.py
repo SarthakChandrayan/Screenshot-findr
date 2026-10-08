@@ -12,7 +12,7 @@ from typing import Callable, Iterable, Optional
 from PIL import Image
 
 from . import tags as tagger
-from .config import IMAGE_EXTENSIONS
+from .config import IMAGE_EXTENSIONS, is_screenshot_name, only_screenshot_names
 from .db import Database
 from .dupes import dhash
 from .ocr import OcrFunc
@@ -35,8 +35,11 @@ def iter_images(folders: Iterable[Path]) -> Iterable[Path]:
     for folder in folders:
         if not folder.is_dir():
             continue
+        names_only = only_screenshot_names(folder)
         for root, _dirs, files in os.walk(folder):
             for name in files:
+                if names_only and not is_screenshot_name(name):
+                    continue
                 if os.path.splitext(name)[1].lower() in IMAGE_EXTENSIONS:
                     yield Path(root) / name
 

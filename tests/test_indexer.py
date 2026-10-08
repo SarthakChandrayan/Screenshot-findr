@@ -78,3 +78,22 @@ def test_real_ocr_end_to_end(tmp_path, db):
     make_screenshot(folder / "Screenshot 2026-10-05 101010.png", "Flight booking reference QX7")
     scan(db, [folder], backend, ocr)
     assert [s.filename for s in db.search("booking")] == ["Screenshot 2026-10-05 101010.png"]
+
+
+def test_mac_screenshot_names():
+    from screenshot_findr.config import is_screenshot_name
+
+    assert is_screenshot_name("Screenshot 2026-10-08 at 10.42.07.png")
+    assert is_screenshot_name("Screen Shot 2021-01-02 at 9.00.00 AM.png")
+    assert not is_screenshot_name("holiday-photo.png")
+
+
+def test_only_screenshot_names_in_mac_screenshot_folder(tmp_path, db, fake_ocr, monkeypatch):
+    from screenshot_findr import config, indexer
+
+    make_screenshot(tmp_path / "Screenshot 2026-10-08 at 10.42.07.png", "x")
+    make_screenshot(tmp_path / "wallpaper.png", "x")
+    monkeypatch.setattr(indexer, "only_screenshot_names", lambda folder: True)
+    assert [p.name for p in indexer.iter_images([tmp_path])] == ["Screenshot 2026-10-08 at 10.42.07.png"]
+    monkeypatch.setattr(config.sys, "platform", "linux")
+    assert config.only_screenshot_names(tmp_path) is False
