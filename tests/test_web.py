@@ -87,3 +87,21 @@ def test_duplicates_and_delete(tmp_path, db, fake_ocr, monkeypatch):
     r = c.post("/api/delete", json={"ids": [group[1]["id"]]}, headers=AJAX).get_json()
     assert r["deleted"] == [group[1]["id"]] and len(trashed) == 1
     assert c.get("/api/duplicates").get_json()["groups"] == []
+
+
+def test_stats_and_forgotten_limit(client):
+    st = client.get("/api/stats").get_json()
+    assert st == {"total": 1, "this_week": 1, "forgotten": 0, "duplicates": 0}
+    assert client.get("/api/forgotten?limit=3").status_code == 200
+
+
+def test_title_prefers_readable_text_line():
+    from screenshot_findr.db import Screenshot
+    from screenshot_findr.web import _title
+
+    def shot(text):
+        return Screenshot(id=1, path="/x/Screenshot 1.png", filename="Screenshot 1.png", size=1,
+                          mtime=0, width=1, height=1, text=text, view_count=0, last_viewed=None)
+
+    assert _title(shot("10:42 4G 85%\nOrder Summary for you\nTotal 5")) == "Order Summary for you"
+    assert _title(shot("")) == "Screenshot 1"

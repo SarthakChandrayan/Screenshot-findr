@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -20,12 +22,22 @@ from .indexer import BackgroundIndexer
 from .semantic import Embedder, search_by_meaning
 from .tags import EMOJI
 
-THUMB_SIZE = (480, 480)
+THUMB_SIZE = (720, 720)  # sharp on high-DPI screens at the largest card size
+
+
+def _title(s: Screenshot) -> str:
+    """A human caption: the first line of text that reads like words, else the file name."""
+    for line in s.text.splitlines()[:12]:
+        line = " ".join(line.split())
+        if len(re.findall(r"[^\W\d_]{2,}", line)) >= 2 and sum(c.isalpha() for c in line) >= 8:
+            return line[:90]
+    return os.path.splitext(s.filename)[0]
 
 
 def _serialize(s: Screenshot) -> dict:
     return {
         "id": s.id,
+        "title": _title(s),
         "filename": s.filename,
         "folder": os.path.dirname(s.path),
         "taken": datetime.fromtimestamp(s.mtime).strftime("%d %b %Y, %H:%M"),
@@ -124,7 +136,18 @@ def create_app(db: Database, indexer: BackgroundIndexer, thumbs_dir: Path, ocr_b
 
     @app.get("/api/forgotten")
     def api_forgotten():
-        return jsonify({"results": [_serialize(s) for s in db.forgotten(limit=8)]})
+        limit = min(max(int(request.args.get("limit", 8) or 8), 1), 100)
+        return jsonify({"results": [_serialize(s) for s in db.forgotten(limit=limit)]})
+
+    @app.get("/api/stats")
+    def api_stats():
+        groups = find_duplicate_groups(db)
+        return jsonify({
+            "total": db.count(),
+            "this_week": db.count_since(time.time() - 7 * 86400),
+            "forgotten": db.forgotten_count(),
+            "duplicates": sum(len(g) - 1 for g in groups),
+        })
 
     @app.get("/api/status")
     def api_status():
@@ -140,7 +163,7 @@ def create_app(db: Database, indexer: BackgroundIndexer, thumbs_dir: Path, ocr_b
     @app.get("/thumb/<int:screenshot_id>")
     def thumb(screenshot_id: int):
         shot = get_or_404(screenshot_id)
-        target = thumbs_dir / f"{shot.id}-{int(shot.mtime)}.jpg"
+        target = thumbs_dir / f"{shot.id}-{int(shot.mtime)}-{THUMB_SIZE[0]}.jpg"
         if not target.exists():
             try:
                 with Image.open(shot.path) as img:

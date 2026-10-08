@@ -48,7 +48,7 @@ def _load_embedder(args):
         import fastembed  # noqa: F401
     except ImportError:
         return None
-    print("Loading meaning search (the first time, this downloads a ~70 MB model)…")
+    print("Loading meaning search (the first time, this downloads a ~70 MB model)…", flush=True)
     return get_embedder(True)
 
 
@@ -57,14 +57,15 @@ def cmd_index(args, db: Database) -> int:
     if not folders:
         print("No screenshot folders found. Pass one with --folder.")
         return 1
-    backend, ocr = get_ocr(args.ocr)
+    # Load meaning search before OCR: onnxruntime can crash if imported after WinRT.
+    embedder = _load_embedder(args)
+    print(f"Meaning search: {'on' if embedder else 'off'}")
+    backend, ocr = get_ocr(args.ocr, with_embedder=embedder is not None)
     print(f"OCR engine: {backend}")
     if ocr is None:
         print("  (no OCR available: only file names will be searchable)")
     for f in folders:
         print(f"Scanning {f}")
-    embedder = _load_embedder(args)
-    print(f"Meaning search: {'on' if embedder else 'off'}")
     res = scan(db, folders, backend, ocr, _print_progress, embedder)
     print(f"Done: {res.added} new, {res.updated} updated, {res.removed} removed, "
           f"{res.unchanged} unchanged, {len(res.failed)} failed. Total: {db.count()}")
@@ -175,9 +176,12 @@ def cmd_serve(args, db: Database) -> int:
     flask.cli.show_server_banner = lambda *a, **k: None
     logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
+    print(f"Starting Screenshot Findr {__version__}…", flush=True)
     folders = _folders(args)
-    backend, ocr = get_ocr(args.ocr)
+    # Load meaning search before OCR: onnxruntime can crash if imported after WinRT.
     embedder = _load_embedder(args)
+    print("Checking the text reader (OCR)…", flush=True)
+    backend, ocr = get_ocr(args.ocr, with_embedder=embedder is not None)
     indexer = BackgroundIndexer(db, folders, backend, ocr, interval=args.interval, embedder=embedder)
     indexer.start()
     app = create_app(db, indexer, data_dir() / "thumbs", backend, embedder)
@@ -185,8 +189,10 @@ def cmd_serve(args, db: Database) -> int:
     url = f"http://127.0.0.1:{args.port}/"
     print(f"Screenshot Findr is running at {url}  (Ctrl+C to stop)")
     print(f"OCR engine: {backend}")
-    print("Meaning search: " + ("on" if embedder else
-                                'off (install with: pip install -e ".[smart]")'))
+    if embedder:
+        print("Meaning search: on")
+    elif not args.no_smart:
+        print('Meaning search: off (install with: pip install -e ".[smart]")')
     print("Watching: " + (", ".join(map(str, folders)) or "no folders found; use --folder"))
     if not args.no_browser:
         threading.Timer(1.0, lambda: webbrowser.open(url)).start()
@@ -248,6 +254,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    import faulthandler
+
+    faulthandler.enable()  # if native code ever crashes Python, at least say where
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(message)s")
     args = build_parser().parse_args(argv)
     db = Database(args.db or data_dir() / "index.sqlite3")

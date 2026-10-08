@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-# tag -> (emoji, list of (regex, weight)); a tag is applied when the total weight >= its threshold
+# tag -> (emoji, list of (regex, weight[, max hits counted])); a tag is applied when the total weight >= its threshold
 RULES: dict[str, tuple[str, list[tuple[str, int]]]] = {
     "receipt": ("🧾", [
         (r"\b(receipt|invoice|order (?:total|summary|confirm\w*)|subtotal|grand total|amount paid|"
@@ -35,9 +35,9 @@ RULES: dict[str, tuple[str, list[tuple[str, int]]]] = {
         (r"\b(error|failed|failure|warning|crash\w*)\b", 1),
     ]),
     "chat": ("💬", [
-        (r"\b(whatsapp|telegram|messenger|imessage|typing…|typing\.\.\.|online|last seen|"
-         r"delivered|seen \d|reply|forwarded)\b", 2),
-        (r"\b\d{1,2}:\d{2}\s?(?:am|pm)?\b", 1),
+        (r"\b(whatsapp|telegram|messenger|imessage|typing|last seen|delivered|seen \d|forwarded)\b", 2),
+        (r"\b(online|reply|replied)\b", 1),
+        (r"\b\d{1,2}:\d{2}\s?(?:am|pm)?\b", 1, 1),  # times are everywhere: count once
         (r"\b(lol|haha|ok+|thanks|thx|bro|hey|hi)\b", 1),
     ]),
     "shopping": ("🛍️", [
@@ -73,12 +73,13 @@ RULES: dict[str, tuple[str, list[tuple[str, int]]]] = {
 EMOJI = {tag: emoji for tag, (emoji, _) in RULES.items()}
 EMOJI["phone"] = "📱"
 _COMPILED = {
-    tag: [(re.compile(rx, re.IGNORECASE | re.MULTILINE), w) for rx, w in rules]
+    tag: [(re.compile(r[0], re.IGNORECASE | re.MULTILINE), r[1], r[2] if len(r) > 2 else 3)
+          for r in rules]
     for tag, (_, rules) in RULES.items()
 }
 THRESHOLD = 2
 # Tags whose weak signals (times, "thanks") show up everywhere need more evidence.
-THRESHOLDS = {"chat": 3}
+THRESHOLDS = {"chat": 3, "meeting": 3}
 
 
 def classify(text: str, filename: str = "", width: Optional[int] = None,
@@ -88,9 +89,9 @@ def classify(text: str, filename: str = "", width: Optional[int] = None,
     scores: dict[str, int] = {}
     for tag, rules in _COMPILED.items():
         score = 0
-        for rx, weight in rules:
+        for rx, weight, cap in rules:
             hits = len(rx.findall(haystack))
-            score += weight * min(hits, 3)  # cap so one repeated word can't dominate
+            score += weight * min(hits, cap)  # cap so one repeated word can't dominate
         if score >= THRESHOLDS.get(tag, THRESHOLD):
             scores[tag] = score
     # Tall, narrow images are almost always phone screenshots.

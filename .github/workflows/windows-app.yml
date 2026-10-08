@@ -1,0 +1,92 @@
+name: Windows app
+
+on:
+  push:
+    tags: ["v*"]
+    branches: ["**"]
+    paths:
+      - "screenshot_findr/**"
+      - "packaging/**"
+      - "pyproject.toml"
+      - ".github/workflows/windows-app.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      PYTHONIOENCODING: utf-8
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install ".[smart]" pyinstaller
+
+      - name: Build ScreenshotFindr.exe
+        run: >
+          pyinstaller packaging/launcher.py --noconfirm --clean
+          --name ScreenshotFindr --icon packaging/icon.ico
+          --add-data "screenshot_findr/templates;screenshot_findr/templates"
+          --collect-submodules screenshot_findr
+          --collect-all winrt --collect-all fastembed --collect-all onnxruntime --collect-all tokenizers
+
+      - name: Smoke test
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $exe = "dist\ScreenshotFindr\ScreenshotFindr.exe"
+          $env:SCREENSHOT_FINDR_HOME = "$env:RUNNER_TEMP\sf-home"
+          New-Item -ItemType Directory -Force shots | Out-Null
+          python -c "from PIL import Image, ImageDraw, ImageFont; im = Image.new('RGB', (900, 200), 'white'); ImageDraw.Draw(im).text((20, 60), 'Hello smoke test receipt total', fill='black', font=ImageFont.truetype('arial.ttf', 44)); im.save('shots/test.png')"
+
+          & $exe --version
+          if ($LASTEXITCODE -ne 0) { throw "--version failed" }
+
+          Write-Host "--- OCR probe (informational: runner images may lack OCR languages)"
+          & $exe --ocr-probe; Write-Host "probe exit code: $LASTEXITCODE"
+
+          Write-Host "--- index (with meaning search: downloads the model, exercises onnxruntime)"
+          & $exe --folder shots index
+          if ($LASTEXITCODE -ne 0) { throw "index failed" }
+
+          & $exe --folder shots --no-smart search test
+          Write-Host "search exit code: $LASTEXITCODE"
+
+          Write-Host "--- web server"
+          $p = Start-Process $exe -ArgumentList "--folder", "shots", "--no-browser", "--no-smart", "--port", "8799" -PassThru
+          $ok = $false
+          for ($i = 0; $i -lt 60; $i++) {
+            Start-Sleep -Seconds 1
+            try { $r = Invoke-RestMethod http://127.0.0.1:8799/api/status; $ok = $true; break } catch {}
+          }
+          $page = (Invoke-WebRequest http://127.0.0.1:8799/ -UseBasicParsing).Content
+          Stop-Process -Id $p.Id -Force
+          if (-not $ok) { throw "server did not start" }
+          if ($page -notmatch "Screenshot Findr") { throw "page did not render" }
+          Write-Host "status: $($r | ConvertTo-Json -Compress)"
+
+      - name: Package
+        shell: pwsh
+        run: Compress-Archive -Path dist\ScreenshotFindr -DestinationPath ScreenshotFindr-windows.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ScreenshotFindr-windows
+          path: ScreenshotFindr-windows.zip
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ScreenshotFindr-windows.zip
+          generate_release_notes: true

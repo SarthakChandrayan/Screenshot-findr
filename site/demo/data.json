@@ -1,0 +1,582 @@
+{
+ "items": [
+  {
+   "id": 1,
+   "filename": "Screenshot 001.png",
+   "title": "are we still on for dinner tonight?",
+   "text": "9:41 5G 82%\n\nMessages\n\nRiya\n\nare we still on for dinner tonight?\nyes! 8:30 at the usual place\nbring the board game\n\nlast seen today at 10:45",
+   "tags": [
+    "chat",
+    "phone"
+   ],
+   "width": 1080,
+   "height": 2340,
+   "age_days": 0.1
+  },
+  {
+   "id": 2,
+   "filename": "Screenshot 002.png",
+   "title": "Trailhead Store",
+   "text": "Trailhead Store\n\nTrailrunner 270 sneakers\nSize 9 - Midnight Blue\n\nIn stock - 40% off\n\nAdd to Cart Buy Now\n\nFree delivery by Friday",
+   "tags": [
+    "shopping"
+   ],
+   "width": 1600,
+   "height": 1000,
+   "age_days": 2
+  },
+  {
+   "id": 3,
+   "filename": "Screenshot 003.png",
+   "title": "$ python app.py",
+   "text": "Terminal\n\n$ python app.py\n\nTraceback (most recent call last):\nFile \"app.py\", line 42, in load\n\nValueError: invalid literal for int()",
+   "tags": [
+    "error"
+   ],
+   "width": 1440,
+   "height": 900,
+   "age_days": 1
+  },
+  {
+   "id": 4,
+   "filename": "Screenshot 004.png",
+   "title": "Boarding Pass",
+   "text": "9:41 5G 82%\n\nBoarding Pass\nFlight SJ 2041\n\nDEL to BLR\n\nGate B12 Seat 14C\nDeparture 06:40\n\nBoarding closes 06:20",
+   "tags": [
+    "travel",
+    "phone"
+   ],
+   "width": 1080,
+   "height": 2340,
+   "age_days": 4
+  },
+  {
+   "id": 5,
+   "filename": "Screenshot 005.png",
+   "title": "Boarding Pass",
+   "text": "9:41 5G 82%\n\nBoarding Pass\nFlight SJ 2041\n\nDEL to BLR\n\nGate B12 Seat 14C\nDeparture 06:40\n\nBoarding closes 06:20",
+   "tags": [
+    "travel",
+    "phone"
+   ],
+   "width": 1080,
+   "height": 2340,
+   "age_days": 3.99
+  },
+  {
+   "id": 6,
+   "filename": "Screenshot 006.png",
+   "title": "Editor - main.py",
+   "text": "Editor - main.py\n\ndef find_screenshots(folder):\nfor name in os. listdir(folder):\nif name.endswith('.png’):\nyield name\n\nreturn None",
+   "tags": [
+    "code"
+   ],
+   "width": 1600,
+   "height": 1000,
+   "age_days": 9
+  },
+  {
+   "id": 7,
+   "filename": "Screenshot 007.png",
+   "title": "Order Summary",
+   "text": "9:41 5G 82%\n\nOrder Summary\nMargherita pizza x2\nGarlic bread x1\nSubtotal 598\n\nGST 30\n\nGrand Total Rs 628\n\nPaid via UPI",
+   "tags": [
+    "receipt",
+    "phone"
+   ],
+   "width": 1080,
+   "height": 2340,
+   "age_days": 12
+  },
+  {
+   "id": 8,
+   "filename": "Screenshot 008.png",
+   "title": "Network: HomeNet-5G",
+   "text": "Network: HomeNet-5G\nWi-Fi password: maple-river-42\nSecurity: WPA2 Personal\n\nConnected devices: 7",
+   "tags": [
+    "password"
+   ],
+   "width": 1920,
+   "height": 1080,
+   "age_days": 40
+  },
+  {
+   "id": 9,
+   "filename": "Screenshot 009.png",
+   "title": "Lemon Garlic Pasta",
+   "text": "9:41 5G 82%\n\nLemon Garlic Pasta\nIngredients\n\n200 g spaghetti\n\n2 tbsp olive oil\n\n3 cloves garlic\n\nCook time 15 minutes",
+   "tags": [
+    "recipe",
+    "phone"
+   ],
+   "width": 1080,
+   "height": 2340,
+   "age_days": 33
+  },
+  {
+   "id": 10,
+   "filename": "Screenshot 010.png",
+   "title": "Design review meeting",
+   "text": "Design review meeting\nThursday 4:00 pm - 5:00 pm\nJoin video call\nmeet.example.com/abc-defg\n\nAgenda: onboarding flow",
+   "tags": [
+    "meeting"
+   ],
+   "width": 1440,
+   "height": 900,
+   "age_days": 3
+  },
+  {
+   "id": 11,
+   "filename": "Screenshot 011.png",
+   "title": "Quarterly goals",
+   "text": "Quarterly goals\n\n1. Ship screenshot search\n2. Improve onboarding\n\n3. Hire two engineers\n\n4. Cut page load time in half",
+   "tags": [],
+   "width": 1440,
+   "height": 900,
+   "age_days": 70
+  },
+  {
+   "id": 12,
+   "filename": "Screenshot 012.png",
+   "title": "Payment successful",
+   "text": "9:41 5G 82%\n\nPayment successful\n\nTransaction ID 88291022\nAmount paid INR 12,499\nTo: City Electricity Board\n\nDebited from XX4821",
+   "tags": [
+    "receipt",
+    "phone"
+   ],
+   "width": 1080,
+   "height": 2340,
+   "age_days": 20
+  },
+  {
+   "id": 13,
+   "filename": "Screenshot 013.png",
+   "title": "Payment successful",
+   "text": "9:41 5G 82%\n\nPayment successful\n\nTransaction ID 88291022\nAmount paid INR 12,499\nTo: City Electricity Board\n\nDebited from XX4821",
+   "tags": [
+    "receipt",
+    "phone"
+   ],
+   "width": 1080,
+   "height": 2340,
+   "age_days": 19.99
+  },
+  {
+   "id": 14,
+   "filename": "Screenshot 014.png",
+   "title": "Blue Door Coffee",
+   "text": "9:41 5G 82%\n\nBlue Door Coffee\n\n4.6 stars - 1.2 km\nOpen until 11 pm\nCafe - Indiranagar\n\nDirections Call",
+   "tags": [
+    "phone"
+   ],
+   "width": 1080,
+   "height": 2340,
+   "age_days": 0.3
+  },
+  {
+   "id": 15,
+   "filename": "Screenshot 015.png",
+   "title": "https://github.com/SarthakChandrayan/Screenshot-findr",
+   "text": "Browser\n\nhttps://github.com/SarthakChandrayan/Screenshot-findr\nFind any screenshot in seconds\nPython MIT licence\n\nStar Fork Watch",
+   "tags": [
+    "link"
+   ],
+   "width": 1600,
+   "height": 1000,
+   "age_days": 95
+  },
+  {
+   "id": 16,
+   "filename": "Screenshot 016.png",
+   "title": "Gift ideas for Mom",
+   "text": "9:41 5G 82%\n\nGift ideas for Mom\n\n- noise cancelling headphones\n- e-reader\n\n- coffee grinder\n\n- photo book",
+   "tags": [
+    "phone"
+   ],
+   "width": 1080,
+   "height": 2340,
+   "age_days": 1
+  },
+  {
+   "id": 17,
+   "filename": "Screenshot 017.png",
+   "title": "404 Not Found",
+   "text": "Browser\n\n404 Not Found\nThe page you are looking for\ncould not be found.\n\nGo back home",
+   "tags": [
+    "error"
+   ],
+   "width": 1920,
+   "height": 1080,
+   "age_days": 6
+  },
+  {
+   "id": 18,
+   "filename": "Screenshot 018.png",
+   "title": "Train ticket confirmed",
+   "text": "9:41 5G 82%\n\nTrain ticket confirmed\nPNR 4521873390\n\n12627 Karnataka Express\nCoach B2 Berth 34\n\nPlatform 5 - 21:15",
+   "tags": [
+    "travel",
+    "phone"
+   ],
+   "width": 1080,
+   "height": 2340,
+   "age_days": 48
+  },
+  {
+   "id": 19,
+   "filename": "Screenshot 019.png",
+   "title": "Your verification code is 482913",
+   "text": "9:41 5G 82%\n\nMessages\n\nYour verification code is 482913\nDo not share this OTP with anyone\n\nValid for 10 minutes",
+   "tags": [
+    "password",
+    "phone"
+   ],
+   "width": 1080,
+   "height": 2340,
+   "age_days": 0.2
+  },
+  {
+   "id": 20,
+   "filename": "Screenshot 020.png",
+   "title": "Dr. Mehta Clinic",
+   "text": "Dr. Mehta Clinic\nPhone +91 98765 43210\nEmail clinic@example.com\n\nAddress: 12 MG Road, Pune",
+   "tags": [
+    "contact"
+   ],
+   "width": 1920,
+   "height": 1080,
+   "age_days": 130
+  },
+  {
+   "id": 21,
+   "filename": "Screenshot 021.png",
+   "title": "Reservation confirmed",
+   "text": "9:41 5G 82%\n\nReservation confirmed\nBooking ID SW-55102\nCheck-in Fri 2 pm\n\nDeluxe room, 2 nights\n\nTotal paid 9,400",
+   "tags": [
+    "travel",
+    "receipt",
+    "phone"
+   ],
+   "width": 1080,
+   "height": 2340,
+   "age_days": 55
+  },
+  {
+   "id": 22,
+   "filename": "Screenshot 022.png",
+   "title": "Big-O cheat sheet",
+   "text": "Big-O cheat sheet\nArray access O(1)\nBinary search O(log n)\nMerge sort O(n log n)\n\nBubble sort O(n*2)",
+   "tags": [],
+   "width": 1920,
+   "height": 1080,
+   "age_days": 160
+  },
+  {
+   "id": 23,
+   "filename": "Screenshot 023.png",
+   "title": "Now playing",
+   "text": "9:41 5G 82%\n\nNow playing\n\nLate Night Drive\nLo-fi Collective\nPlaylist: Focus Mode\n\n2:14 / 3:58",
+   "tags": [
+    "phone"
+   ],
+   "width": 1080,
+   "height": 2340,
+   "age_days": 2
+  },
+  {
+   "id": 24,
+   "filename": "Screenshot 024.png",
+   "title": "Meeting notes - Sprint 14",
+   "text": "Meeting notes - Sprint 14\nDecided to move the launch to May\nOwner: Arjun\n\nFollow up with design on icons",
+   "tags": [],
+   "width": 1440,
+   "height": 900,
+   "age_days": 26
+  },
+  {
+   "id": 25,
+   "filename": "Screenshot 025.png",
+   "title": "24 C Partly cloudy",
+   "text": "9:41 5G 82%\n\nBengaluru\n24 C Partly cloudy\nHigh 28 Low 19\n\nRain expected after 5 pm",
+   "tags": [
+    "phone"
+   ],
+   "width": 1080,
+   "height": 2340,
+   "age_days": 7
+  },
+  {
+   "id": 26,
+   "filename": "Screenshot 026.png",
+   "title": "Invoice INV-2207 from Pixel Studio",
+   "text": "Invoice INV-2207 from Pixel Studio\nAmount due: USD 450.00\nDue date: 30 June\n\nPay online or reply to this email",
+   "tags": [
+    "receipt"
+   ],
+   "width": 1440,
+   "height": 900,
+   "age_days": 85
+  },
+  {
+   "id": 27,
+   "filename": "Screenshot 027.png",
+   "title": "Mechanical keyboard - 75%",
+   "text": "9:41 5G 82%\n\nWishlist\n\nMechanical keyboard - 75%\nPrice 6,999 MRP 8,999\nRatings 4.5 (2,310 reviews)\n\nAdd to Cart",
+   "tags": [
+    "shopping",
+    "phone"
+   ],
+   "width": 1080,
+   "height": 2340,
+   "age_days": 18
+  },
+  {
+   "id": 28,
+   "filename": "Screenshot 028.png",
+   "title": "$ npm run build",
+   "text": "Terminal\n\n$ npm run build\nerror TS2322: Type 'string' is not\nassignable to type 'number'.\n\nBuild failed in 3.2s",
+   "tags": [
+    "error"
+   ],
+   "width": 1920,
+   "height": 1080,
+   "age_days": 14
+  },
+  {
+   "id": 29,
+   "filename": "Screenshot 029.png",
+   "title": "Morning run",
+   "text": "9:41 5G 82%\n\nMorning run\n5.2km 28:41\nAvg pace 5:31 /km\n\nCalories 341",
+   "tags": [
+    "phone"
+   ],
+   "width": 1080,
+   "height": 2340,
+   "age_days": 5
+  },
+  {
+   "id": 30,
+   "filename": "Screenshot 030.png",
+   "title": "Monthly budget",
+   "text": "Monthly budget\nRent 18,000\n\nGroceries 6,500\nTransport 2,200\n\nSavings 10,000",
+   "tags": [],
+   "width": 1440,
+   "height": 900,
+   "age_days": 62
+  }
+ ],
+ "duplicates": [
+  [
+   4,
+   5
+  ],
+  [
+   12,
+   13
+  ]
+ ],
+ "tag_rules": [
+  {
+   "tag": "receipt",
+   "threshold": 2,
+   "rules": [
+    [
+     "\\b(receipt|invoice|order (?:total|summary|confirm\\w*)|subtotal|grand total|amount paid|payment (?:successful|received|confirm\\w*)|transaction id|txn id|gst|vat|tax invoice)\\b",
+     2,
+     3
+    ],
+    [
+     "\\b(total|paid|payment|order|qty|quantity|price|refund|upi|debited|credited)\\b",
+     1,
+     3
+    ],
+    [
+     "(₹|\\$|€|£|\\bINR\\b|\\bUSD\\b|\\bEUR\\b|\\bRs\\.?)\\s?\\d",
+     1,
+     3
+    ]
+   ]
+  },
+  {
+   "tag": "travel",
+   "threshold": 2,
+   "rules": [
+    [
+     "\\b(boarding pass|flight|pnr|e-?ticket|itinerary|check-?in|departure|arrival|gate \\w+|seat \\d+\\w?|booking (?:reference|id|confirm\\w*)|train|platform \\d+|hotel|reservation)\\b",
+     2,
+     3
+    ],
+    [
+     "\\b(terminal|airport|airlines?|passenger|journey|trip|coach|berth)\\b",
+     1,
+     3
+    ]
+   ]
+  },
+  {
+   "tag": "code",
+   "threshold": 2,
+   "rules": [
+    [
+     "(\\bdef \\w+\\(|\\bfunction\\s*\\w*\\(|=>|\\bconst \\w+ =|\\bimport \\w+|#include|\\bpublic static\\b|\\bclass \\w+[:({]|\\breturn\\b.*;|console\\.log|print\\(|</?\\w+>|\\{\\s*$)",
+     2,
+     3
+    ],
+    [
+     "\\b(npm|pip|git|sudo|docker|python|javascript|java|sql|select \\* from)\\b",
+     1,
+     3
+    ],
+    [
+     "[{}();]{3,}",
+     1,
+     3
+    ]
+   ]
+  },
+  {
+   "tag": "error",
+   "threshold": 2,
+   "rules": [
+    [
+     "\\b(traceback|exception|stack ?trace|segmentation fault|fatal error|error code|errno|failed to|could not|cannot find|not found|404|500 internal)\\b",
+     2,
+     3
+    ],
+    [
+     "\\b\\w+(?:Error|Exception):",
+     2,
+     3
+    ],
+    [
+     "\\b(error|failed|failure|warning|crash\\w*)\\b",
+     1,
+     3
+    ]
+   ]
+  },
+  {
+   "tag": "chat",
+   "threshold": 3,
+   "rules": [
+    [
+     "\\b(whatsapp|telegram|messenger|imessage|typing|last seen|delivered|seen \\d|forwarded)\\b",
+     2,
+     3
+    ],
+    [
+     "\\b(online|reply|replied)\\b",
+     1,
+     3
+    ],
+    [
+     "\\b\\d{1,2}:\\d{2}\\s?(?:am|pm)?\\b",
+     1,
+     1
+    ],
+    [
+     "\\b(lol|haha|ok+|thanks|thx|bro|hey|hi)\\b",
+     1,
+     3
+    ]
+   ]
+  },
+  {
+   "tag": "shopping",
+   "threshold": 2,
+   "rules": [
+    [
+     "\\b(add to (?:cart|bag|basket)|buy now|in stock|out of stock|free delivery|wishlist|size guide|deal of the day|\\d+% off|mrp)\\b",
+     2,
+     3
+    ],
+    [
+     "\\b(amazon|flipkart|myntra|ebay|etsy|price|ratings?|reviews?|delivery|sold by)\\b",
+     1,
+     3
+    ]
+   ]
+  },
+  {
+   "tag": "recipe",
+   "threshold": 2,
+   "rules": [
+    [
+     "\\b(ingredients|instructions|preheat|tablespoons?|teaspoons?|tbsp|tsp|cups? of|bake|simmer|prep time|cook time|servings)\\b",
+     2,
+     3
+    ],
+    [
+     "\\b(recipe|minutes|grams?|salt|sugar|flour|oil|garlic|onion)\\b",
+     1,
+     3
+    ]
+   ]
+  },
+  {
+   "tag": "contact",
+   "threshold": 2,
+   "rules": [
+    [
+     "\\b[\\w.+-]+@[\\w-]+\\.[\\w.]{2,}\\b",
+     2,
+     3
+    ],
+    [
+     "(\\+\\d{1,3}[\\s-]?)?\\(?\\d{3,5}\\)?[\\s-]?\\d{3,4}[\\s-]?\\d{3,4}\\b",
+     1,
+     3
+    ],
+    [
+     "\\b(phone|mobile|email|address|contact)\\b",
+     1,
+     3
+    ]
+   ]
+  },
+  {
+   "tag": "link",
+   "threshold": 2,
+   "rules": [
+    [
+     "\\bhttps?://\\S+|\\bwww\\.\\S+\\.\\w{2,}",
+     2,
+     3
+    ]
+   ]
+  },
+  {
+   "tag": "meeting",
+   "threshold": 3,
+   "rules": [
+    [
+     "\\b(meeting|zoom|google meet|teams|calendar|agenda|invite|rsvp|join (?:the )?call|reschedul\\w*)\\b",
+     2,
+     3
+    ],
+    [
+     "\\b(mon|tue|wed|thu|fri|sat|sun)\\w*\\b",
+     1,
+     3
+    ],
+    [
+     "\\b\\d{1,2}(:\\d{2})?\\s?(am|pm)\\b",
+     1,
+     3
+    ]
+   ]
+  },
+  {
+   "tag": "password",
+   "threshold": 2,
+   "rules": [
+    [
+     "\\b(password|passcode|wi-?fi|ssid|otp|one[- ]time password|verification code|recovery code|backup code|api key|secret)\\b",
+     2,
+     3
+    ]
+   ]
+  }
+ ],
+ "ocr_backend": "tesseract"
+}
