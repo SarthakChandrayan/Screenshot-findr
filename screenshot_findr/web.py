@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 import time
@@ -24,9 +25,19 @@ from .tags import EMOJI
 THUMB_SIZE = (720, 720)  # sharp on high-DPI screens at the largest card size
 
 
+def _title(s: Screenshot) -> str:
+    """A human caption: the first line of text that reads like words, else the file name."""
+    for line in s.text.splitlines()[:12]:
+        line = " ".join(line.split())
+        if len(re.findall(r"[^\W\d_]{2,}", line)) >= 2 and sum(c.isalpha() for c in line) >= 8:
+            return line[:90]
+    return os.path.splitext(s.filename)[0]
+
+
 def _serialize(s: Screenshot) -> dict:
     return {
         "id": s.id,
+        "title": _title(s),
         "filename": s.filename,
         "folder": os.path.dirname(s.path),
         "taken": datetime.fromtimestamp(s.mtime).strftime("%d %b %Y, %H:%M"),
