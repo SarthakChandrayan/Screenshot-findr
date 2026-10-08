@@ -87,3 +87,9 @@ def test_duplicates_and_delete(tmp_path, db, fake_ocr, monkeypatch):
     r = c.post("/api/delete", json={"ids": [group[1]["id"]]}, headers=AJAX).get_json()
     assert r["deleted"] == [group[1]["id"]] and len(trashed) == 1
     assert c.get("/api/duplicates").get_json()["groups"] == []
+
+
+def test_stats_and_forgotten_limit(client):
+    st = client.get("/api/stats").get_json()
+    assert st == {"total": 1, "this_week": 1, "forgotten": 0, "duplicates": 0}
+    assert client.get("/api/forgotten?limit=3").status_code == 200
