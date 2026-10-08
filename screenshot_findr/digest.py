@@ -109,6 +109,8 @@ def write_digest(db: Database, target: Path) -> int:
 
 
 def _scheduled_command(extra_args: list[str]) -> str:
+    if getattr(sys, "frozen", False):  # packaged .exe
+        return subprocess.list2cmdline([sys.executable, *extra_args, "remind"])
     exe = Path(sys.executable)
     pythonw = exe.with_name("pythonw.exe")  # runs without flashing a console window
     if pythonw.exists():

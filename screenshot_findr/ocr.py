@@ -95,7 +95,10 @@ def probe_windows_ocr(timeout: float = 90, with_embedder: bool = False) -> tuple
     runtime like the app does, so a clash between the two is caught here too.
     Returns (works, details).
     """
-    cmd = [sys.executable, "-X", "faulthandler", "-m", "screenshot_findr.ocr", "--probe"]
+    if getattr(sys, "frozen", False):  # packaged .exe: it handles --ocr-probe itself
+        cmd = [sys.executable, "--ocr-probe"]
+    else:
+        cmd = [sys.executable, "-X", "faulthandler", "-m", "screenshot_findr.ocr", "--probe"]
     if with_embedder:
         cmd.append("--with-embedder")
     try:

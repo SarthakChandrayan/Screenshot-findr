@@ -1,4 +1,7 @@
-# 📸 Screenshot Findr
+# Screenshot Findr
+
+[Live demo](https://sarthakchandrayan.github.io/Screenshot-findr/) ·
+[Download for Windows](https://github.com/SarthakChandrayan/Screenshot-findr/releases/latest/download/ScreenshotFindr-windows.zip)
 
 You take a screenshot to remember something, and then you never see it again.
 Screenshot Findr reads the text **inside** every screenshot and lets you search
@@ -18,11 +21,11 @@ Everything runs **on your own computer**. No images or text leave your machine.
   captures (`Videos\Captures`).
 - **Keeps itself up to date**: re-scans every minute, and only reads new or
   changed files.
-- **Search by meaning** (✨ optional): "shoes I wanted to buy" finds a shopping
+- **Search by meaning** (optional): "shoes I wanted to buy" finds a shopping
   page that says *sneakers, add to cart*, even though the word "shoes" isn't in it.
   Uses a small AI model that runs on your computer (about 70 MB, downloaded once).
-- **Automatic tags**: 🧾 receipt, ✈️ travel, 💻 code, ⚠️ error, 💬 chat,
-  🛍️ shopping, 🍳 recipe, 📇 contact, 🔗 link, 📅 meeting, 🔑 password, 📱 phone.
+- **Automatic tags**: receipt, travel, code, error, chat, shopping, recipe,
+  contact, link, meeting, password, phone.
   Click a tag to see only those screenshots.
 - **Duplicates tab**: groups look-alike screenshots (same screen captured
   twice, resized or re-saved copies) and moves the extras to the **Recycle Bin**
@@ -31,7 +34,15 @@ Everything runs **on your own computer**. No images or text leave your machine.
 - **Weekly reminder**: once a week, a page opens with screenshots you forgot about.
 - **Open / Show in folder / Copy text / Delete** right from the results.
 
-## Quick start (Windows)
+## Download (Windows 10/11)
+
+Get **ScreenshotFindr-windows.zip** from the
+[latest release](https://github.com/SarthakChandrayan/Screenshot-findr/releases/latest),
+extract it and double-click **ScreenshotFindr.exe**. Your browser opens the
+search page. Windows may warn that the app is from an unknown publisher (it
+isn't code-signed): click *More info → Run anyway*.
+
+## Run from source
 
 1. Install **Python 3.9+** from <https://www.python.org/downloads/>
    (tick *"Add python.exe to PATH"* during setup).
@@ -95,6 +106,18 @@ Pick one with `--ocr windows|tesseract|none`.
 If the Windows engine reports no languages, add one under
 *Settings → Time & language → Language & region* (OCR is part of the basic
 language pack).
+
+## Website and releases
+
+- `site/` is a static website with a browser demo of the app (no server). The
+  demo data is produced by the real pipeline: `python scripts/build_demo.py`.
+  It is published to GitHub Pages by `.github/workflows/pages.yml` on every push
+  to `main` that touches `site/` (one-time setup: *Settings → Pages → Source:
+  GitHub Actions*).
+- `.github/workflows/windows-app.yml` builds `ScreenshotFindr.exe` with
+  PyInstaller and smoke-tests it on every push. Pushing a tag like `v0.3.0`
+  also attaches `ScreenshotFindr-windows.zip` to a GitHub Release, which the
+  website's download button points to.
 
 ## Development
 

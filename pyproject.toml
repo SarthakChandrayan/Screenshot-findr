@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "screenshot-findr"
-version = "0.2.0"
+version = "0.3.0"
 description = "Find the screenshots you saved and forgot about: search them by the text inside them."
 readme = "README.md"
 requires-python = ">=3.9"

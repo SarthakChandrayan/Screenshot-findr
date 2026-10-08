@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Screenshot Findr</title>
+<meta name="description" content="Search the text inside every screenshot you've taken. A local, private Windows app, with a live demo that runs in your browser.">
+<meta property="og:title" content="Screenshot Findr">
+<meta property="og:description" content="Search the text inside every screenshot you've taken. Live demo in the browser; download for Windows.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%23111%22/><path d=%22M8 13V8h5M19 8h5v5M24 19v5h-5M13 24H8v-5%22 stroke=%22%23ff5a1f%22 stroke-width=%223%22 fill=%22none%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>try { const t = localStorage.getItem("sf-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-bar">
+  <div class="wrap">
+    <a class="wordmark" href="#top">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"><path d="M3 9V3h6M15 3h6v6M21 15v6h-6M9 21H3v-6"/></svg>
+      Screenshot Findr
+    </a>
+    <nav class="site-nav">
+      <a href="#demo" class="keep">Demo</a>
+      <a href="#how">How it works</a>
+      <a href="#download" class="keep">Download</a>
+      <a href="https://github.com/SarthakChandrayan/Screenshot-findr">GitHub</a>
+    </nav>
+    <button class="theme-btn" id="theme" title="Theme"></button>
+  </div>
+</header>
+
+<main id="top">
+  <section class="wrap intro">
+    <div>
+      <p class="eyebrow">Desktop app · Windows</p>
+      <h1>Find the screenshot you took for a reason.</h1>
+      <p class="lead">Screenshot Findr reads the text inside every screenshot on your PC and makes it searchable. It tags them, finds duplicates and reminds you about the ones you never opened. Everything stays on your computer.</p>
+      <div class="cta">
+        <a class="btn primary" href="#download">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+          Download for Windows
+        </a>
+        <a class="btn" href="#demo">Try the demo</a>
+      </div>
+    </div>
+    <dl class="facts">
+      <dt>runs on</dt><dd>Windows 10 / 11</dd>
+      <dt>text reading</dt><dd>Windows built-in OCR</dd>
+      <dt>search</dt><dd>SQLite full-text + local AI model</dd>
+      <dt>privacy</dt><dd>offline, nothing uploaded</dd>
+      <dt>stack</dt><dd>Python · Flask · vanilla JS</dd>
+      <dt>licence</dt><dd>free &amp; open source</dd>
+    </dl>
+  </section>
+
+  <section class="wrap section" id="demo">
+    <div class="section-head">
+      <span class="num">01</span><h2>Live demo</h2>
+      <p>30 sample screenshots, already read and tagged by the real app. It all runs in your browser, so you can also add your own.</p>
+    </div>
+    <div class="try">try:
+      <button data-q="wifi password">wifi password</button>
+      <button data-q="payment">payment</button>
+      <button data-q="flight">flight</button>
+      <button data-q="error">error</button>
+      <button data-q="shoes">shoes</button><span>(found by meaning)</span>
+    </div>
+
+    <div class="window">
+      <div class="win-title"><span class="dots"><i></i><i></i><i></i></span><span class="addr">127.0.0.1:8765 · Screenshot Findr</span></div>
+      <div class="app" id="app">
+        <div class="bar">
+          <div class="bar-inner">
+            <div class="search">
+              <svg class="glass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Search text in screenshots, or describe one" aria-label="Search the demo screenshots">
+              <button class="clear" id="clear" hidden>esc</button>
+            </div>
+            <nav class="views" aria-label="Demo views">
+              <button data-view="library" class="on">Library</button>
+              <button data-view="forgotten">Never opened<span class="n" id="nav-forgotten"></span></button>
+              <button data-view="dupes">Duplicates<span class="n" id="nav-dupes"></span></button>
+            </nav>
+            <button class="add-btn" id="add" title="Read your own screenshots in this browser. Nothing is uploaded.">+ add yours</button>
+            <input type="file" id="file" accept="image/*" multiple hidden>
+          </div>
+        </div>
+        <div class="app-body">
+          <div id="view-library">
+            <div class="status" id="status"></div>
+            <div class="filters" id="filters"></div>
+            <div id="results"></div>
+          </div>
+          <div id="view-forgotten" hidden>
+            <div class="page-title"><div><h3>Never opened</h3><p>Screenshots older than a few days that you haven't looked at since. Opening one here takes it off the list.</p></div></div>
+            <div id="forgotten"></div>
+          </div>
+          <div id="view-dupes" hidden>
+            <div class="page-title"><div><h3>Duplicates</h3><p id="dupes-sub"></p></div></div>
+            <div id="dupes"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="demo-note">In the app, "related" results come from a small local AI model (bge-small). The demo fakes that part with a word list. Images you add are read by Tesseract.js in this tab and never leave your device.</p>
+  </section>
+
+  <section class="wrap section" id="how">
+    <div class="section-head">
+      <span class="num">02</span><h2>How it works</h2>
+      <p>A small local web app: a Python backend indexes your screenshots, and a browser page searches them.</p>
+    </div>
+    <ol class="steps">
+      <li><span class="k">watch</span><h3>Find screenshots</h3><p>Detects <code>Pictures\Screenshots</code>, OneDrive and Game Bar folders, then rescans every minute and only reads new or changed files.</p></li>
+      <li><span class="k">read</span><h3>Read the text</h3><p>Uses the OCR engine built into Windows, with Tesseract as a fallback. Images never leave the PC.</p></li>
+      <li><span class="k">index</span><h3>Make it searchable</h3><p>Text goes into SQLite <code>FTS5</code> for instant word search, plus a local embedding model for search by meaning.</p></li>
+      <li><span class="k">organise</span><h3>Keep it tidy</h3><p>Rule-based tags, perceptual-hash duplicate detection and a weekly digest of forgotten screenshots.</p></li>
+    </ol>
+    <div class="features">
+      <div><b>Search as you type</b><span>Partial words, highlighted matches</span></div>
+      <div><b>Search by meaning</b><span>"shoes" finds a page that says sneakers</span></div>
+      <div><b>Auto tags</b><span>receipt, travel, code, error, password…</span></div>
+      <div><b>Duplicates</b><span>Look-alikes go to the Recycle Bin in one click</span></div>
+      <div><b>Never opened</b><span>Plus an optional weekly reminder</span></div>
+      <div><b>Keyboard first</b><span>/ to search, ← → to browse, c to copy text</span></div>
+    </div>
+  </section>
+
+  <section class="wrap section" id="download">
+    <div class="section-head">
+      <span class="num">03</span><h2>Download</h2>
+      <p>Free, for Windows 10 and 11. No account, no cloud.</p>
+    </div>
+    <div class="download">
+      <div>
+        <h3>Get the app</h3>
+        <ol>
+          <li><b>Download</b> the zip below and extract it anywhere.</li>
+          <li>Double-click <b>ScreenshotFindr.exe</b>. Your browser opens the search page.</li>
+          <li>The first run reads all your screenshots, which takes a few minutes for a big folder.</li>
+        </ol>
+        <div class="cta">
+          <a class="btn primary" href="https://github.com/SarthakChandrayan/Screenshot-findr/releases/latest/download/ScreenshotFindr-windows.zip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+            ScreenshotFindr-windows.zip
+          </a>
+          <a class="btn" href="https://github.com/SarthakChandrayan/Screenshot-findr/releases">All releases</a>
+        </div>
+        <p class="small">Windows may show "Windows protected your PC" because the app isn't code-signed. Click <b>More info → Run anyway</b>.</p>
+      </div>
+      <div>
+        <h3>Or run from source</h3>
+<pre class="code"><span class="c"># PowerShell, with Python 3.9+</span>
+git clone https://github.com/SarthakChandrayan/Screenshot-findr
+cd Screenshot-findr
+python -m venv .venv
+.venv\Scripts\python -m pip install -e ".[smart]"
+.venv\Scripts\python -m screenshot_findr</pre>
+        <p class="small">Weekly reminder: <code>screenshot_findr reminder install</code>. Terminal search: <code>screenshot_findr search wifi</code>.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Screenshot Findr · built by <a href="https://github.com/SarthakChandrayan">Sarthak Chandrayan</a></span>
+    <span><a href="https://github.com/SarthakChandrayan/Screenshot-findr">source on GitHub</a></span>
+  </div>
+</footer>
+
+<div class="viewer" id="viewer" hidden role="dialog" aria-modal="true" aria-label="Screenshot">
+  <div class="stage" id="stage">
+    <span class="counter" id="v-counter"></span>
+    <button class="navbtn prev" id="v-prev" title="Previous (←)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 18-6-6 6-6"/></svg></button>
+    <img id="v-img" alt="">
+    <button class="navbtn next" id="v-next" title="Next (→)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg></button>
+  </div>
+  <aside class="side">
+    <div class="side-head"><h2 id="v-name"></h2><button class="x" id="v-close">esc ✕</button></div>
+    <dl class="meta" id="v-meta"></dl>
+    <div class="actions">
+      <button id="v-open">open full size</button>
+      <button id="v-copy">copy text</button>
+      <button class="del" id="v-delete">delete</button>
+    </div>
+    <div class="ocr"><h3>Text in image</h3><pre id="v-text"></pre></div>
+    <div class="keys"><span>← → browse</span><span>c copy</span><span>esc close</span></div>
+  </aside>
+</div>
+
+<div class="toast hide" id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
