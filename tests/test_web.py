@@ -72,6 +72,9 @@ def test_duplicates_and_delete(tmp_path, db, fake_ocr, monkeypatch):
     a = make_screenshot(folder / "a.png", "Your order has shipped")
     shutil.copy(a, folder / "a-copy.png")
     make_screenshot(folder / "b.png", "Totally different picture here")
+    for name, text in [("a", "Your order has shipped"), ("a-copy", "Your order has shipped"),
+                       ("b", "Totally different picture here")]:
+        (folder / f"{name}.txt").write_text(text)  # what the fake OCR "reads"
     scan(db, [folder], "fake", fake_ocr)
     trashed = []
     monkeypatch.setattr(web, "send2trash", lambda p: trashed.append(p))
