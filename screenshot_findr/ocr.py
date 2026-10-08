@@ -143,6 +143,39 @@ def _probe_main() -> int:
     return 0
 
 
+def _macos_ocr() -> Optional[OcrFunc]:
+    """Apple's Vision framework (the engine behind Live Text), via pyobjc."""
+    if sys.platform != "darwin":
+        return None
+    try:
+        import objc
+        import Vision
+        from Foundation import NSURL
+    except ImportError:
+        return None
+
+    def run(path: str) -> str:
+        with objc.autorelease_pool():
+            url = NSURL.fileURLWithPath_(os.path.abspath(path))
+            request = Vision.VNRecognizeTextRequest.alloc().init()
+            request.setRecognitionLevel_(Vision.VNRequestTextRecognitionLevelAccurate)
+            request.setUsesLanguageCorrection_(True)
+            handler = Vision.VNImageRequestHandler.alloc().initWithURL_options_(url, None)
+            ok, error = handler.performRequests_error_([request], None)
+            if not ok:
+                raise RuntimeError(str(error))
+            # Vision's coordinates start bottom-left: sort lines top-to-bottom, then left-to-right.
+            found = []
+            for obs in request.results() or []:
+                candidates = obs.topCandidates_(1)
+                if candidates:
+                    box = obs.boundingBox()
+                    found.append((-round(box.origin.y, 2), box.origin.x, str(candidates[0].string())))
+            return "\n".join(text for _, _, text in sorted(found))
+
+    return run
+
+
 def _tesseract_ocr() -> Optional[OcrFunc]:
     try:
         import pytesseract
@@ -172,10 +205,10 @@ def get_ocr(preferred: str = "auto",
 
     Pass with_embedder=True when meaning search is already loaded in this process.
     """
-    backends = {"windows": _windows_ocr, "tesseract": _tesseract_ocr}
+    backends = {"windows": _windows_ocr, "macos": _macos_ocr, "tesseract": _tesseract_ocr}
     if preferred == "none":
         return "none", None
-    order = [preferred] if preferred in backends else ["windows", "tesseract"]
+    order = [preferred] if preferred in backends else ["windows", "macos", "tesseract"]
     for name in order:
         if name == "windows":
             if sys.platform != "win32":

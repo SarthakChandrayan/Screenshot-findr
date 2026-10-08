@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import os
+import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -41,10 +43,37 @@ def _windows_shell_folder(value_name: str) -> Path | None:
     return Path(os.path.expandvars(raw))
 
 
+# macOS names screenshots like "Screenshot 2026-10-08 at 10.42.07.png" (older: "Screen Shot ...").
+_MAC_SCREENSHOT_NAME = re.compile(r"^(Screenshot|Screen Shot|Screen Recording)\b", re.IGNORECASE)
+
+
+def mac_screenshot_folder() -> Path:
+    """Where macOS saves screenshots: the user's custom location, else the Desktop."""
+    try:
+        out = subprocess.run(["defaults", "read", "com.apple.screencapture", "location"],
+                             capture_output=True, text=True, timeout=5).stdout.strip()
+        if out and Path(out).expanduser().is_dir():
+            return Path(out).expanduser()
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return Path.home() / "Desktop"
+
+
+def is_screenshot_name(name: str) -> bool:
+    return bool(_MAC_SCREENSHOT_NAME.match(name))
+
+
+def only_screenshot_names(folder: Path) -> bool:
+    """On a Mac the screenshot folder is often the Desktop: index only files named like screenshots."""
+    return sys.platform == "darwin" and folder.resolve() == mac_screenshot_folder().resolve()
+
+
 def default_screenshot_folders() -> list[Path]:
-    """Folders where Windows (Win+PrtScn, Snipping Tool) usually saves screenshots."""
+    """Folders where Windows (Win+PrtScn, Snipping Tool) or macOS usually save screenshots."""
     home = Path.home()
     candidates: list[Path] = []
+    if sys.platform == "darwin":
+        candidates.append(mac_screenshot_folder())
 
     screenshots = _windows_shell_folder(_SCREENSHOTS_FOLDER_ID)
     if screenshots:

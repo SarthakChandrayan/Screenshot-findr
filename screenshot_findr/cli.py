@@ -205,7 +205,7 @@ def _add_common(parser: argparse.ArgumentParser, top_level: bool) -> None:
     d = (lambda v: v) if top_level else (lambda v: argparse.SUPPRESS)
     parser.add_argument("--folder", action="append", metavar="PATH", default=d(None),
                         help="screenshot folder to scan (repeatable; default: auto-detect)")
-    parser.add_argument("--ocr", choices=["auto", "windows", "tesseract", "none"], default=d("auto"),
+    parser.add_argument("--ocr", choices=["auto", "windows", "macos", "tesseract", "none"], default=d("auto"),
                         help="OCR engine to use (default: auto)")
     parser.add_argument("--db", metavar="FILE", default=d(None), help="index database file")
     parser.add_argument("--no-smart", action="store_true", default=d(False),

@@ -22,6 +22,8 @@ dependencies = [
     "winrt-Windows.Media.Ocr>=2.0; sys_platform == 'win32'",
     "winrt-Windows.Storage>=2.0; sys_platform == 'win32'",
     "winrt-Windows.Storage.Streams>=2.0; sys_platform == 'win32'",
+    # macOS: Apple's Vision text recognition (the engine behind Live Text)
+    "pyobjc-framework-Vision>=9.0; sys_platform == 'darwin'",
 ]
 
 [project.optional-dependencies]

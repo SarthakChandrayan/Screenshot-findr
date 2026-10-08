@@ -42,6 +42,22 @@ extract it and double-click **ScreenshotFindr.exe**. Your browser opens the
 search page. Windows may warn that the app is from an unknown publisher (it
 isn't code-signed): click *More info → Run anyway*.
 
+## macOS (from source)
+
+The app also runs on a Mac. It finds your screenshot folder (the Desktop, or the
+location you set in the Screenshot app), only indexes files named like
+screenshots, and reads text with Apple's built-in Vision engine.
+
+```bash
+git clone https://github.com/SarthakChandrayan/Screenshot-findr
+cd Screenshot-findr
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e ".[smart]"
+python -m screenshot_findr
+```
+
+The weekly reminder is Windows-only for now.
+
 ## Run from source
 
 1. Install **Python 3.9+** from <https://www.python.org/downloads/>

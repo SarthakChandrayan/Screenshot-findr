@@ -15,3 +15,29 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y tesseract-ocr
       - run: pip install ".[dev,tesseract]"
       - run: pytest -q
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ".[dev]"
+      - run: pytest -q
+      - name: Apple Vision OCR smoke test
+        run: |
+          python - <<'PY'
+          from PIL import Image, ImageDraw, ImageFont
+          from screenshot_findr.ocr import get_ocr
+          from screenshot_findr.config import default_screenshot_folders
+          img = Image.new("RGB", (900, 200), "white")
+          font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 44)
+          ImageDraw.Draw(img).text((20, 60), "Hello Findr receipt total", fill="black", font=font)
+          img.save("probe.png")
+          backend, ocr = get_ocr()
+          text = ocr("probe.png") if ocr else ""
+          print("backend:", backend, "| text:", repr(text), "| folders:", default_screenshot_folders())
+          assert backend == "macos", backend
+          assert "Findr" in text, text
+          PY
