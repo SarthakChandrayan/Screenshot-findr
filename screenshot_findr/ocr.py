@@ -65,7 +65,10 @@ def _windows_ocr() -> Optional[OcrFunc]:
                 scale = limit / longest
                 transform.scaled_width = int(decoder.pixel_width * scale)
                 transform.scaled_height = int(decoder.pixel_height * scale)
-            bitmap = await decoder.get_software_bitmap_async(
+            # winrt 3.x names each overload separately; older versions share one name.
+            get_bitmap = getattr(decoder, "get_software_bitmap_transformed_async",
+                                 decoder.get_software_bitmap_async)
+            bitmap = await get_bitmap(
                 BitmapPixelFormat.BGRA8,
                 BitmapAlphaMode.PREMULTIPLIED,
                 transform,
